@@ -49,6 +49,7 @@ type Client struct {
 	Namespace              string               // SOAP Namespace
 	URNamespace            string               // Uniform Resource Namespace
 	ThisNamespace          string               // SOAP This-Namespace (tns)
+	SucNamespace           string               // suc
 	ExcludeActionNamespace bool                 // Include Namespace to SOAP Action header
 	Envelope               string               // Optional SOAP Envelope
 	Header                 Header               // Optional SOAP Header
@@ -101,6 +102,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		URNAttr:      c.URNamespace,
 		NSAttr:       c.Namespace,
 		TNSAttr:      c.ThisNamespace,
+		SUCAttr:      c.SucNamespace,
 		XSIAttr:      XSINamespace,
 		Header:       c.Header,
 		Body:         in,
@@ -129,10 +131,11 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	if err != nil {
 		return err
 	}
-	setHeaders(r)
 	if c.Pre != nil {
 		c.Pre(r)
 	}
+	setHeaders(r)
+
 	resp, err := cli.Do(r)
 	if err != nil {
 		return err
@@ -141,6 +144,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	if c.Post != nil {
 		c.Post(resp)
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		// read only the first MiB of the body in error case
 		limReader := io.LimitReader(resp.Body, 1024*1024)
@@ -239,6 +243,7 @@ type Envelope struct {
 	EnvelopeAttr string   `xml:"xmlns:soapenv,attr"`
 	NSAttr       string   `xml:"xmlns,attr"`
 	TNSAttr      string   `xml:"xmlns:tns,attr,omitempty"`
+	SUCAttr      string   `xml:"xmlns:suc,attr,omitempty"`
 	URNAttr      string   `xml:"xmlns:urn,attr,omitempty"`
 	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
 	Header       Message  `xml:"soapenv:Header"`
